@@ -1,13 +1,12 @@
 #pragma once
 
-class IArithmeticsAdd
-{
+class IArithmeticsAdd {
 public:
     virtual double Addition(double A, double B) = 0;
-    virtual ~IArithmeticsAdd() {};
+    virtual ~IArithmeticsAdd() = default;
 };
 
-class Add : public IArithmeticsAdd
-{
+class ArithmeticsAdd : public IArithmeticsAdd {
+public:
     double Addition(double A, double B) override;
 };
