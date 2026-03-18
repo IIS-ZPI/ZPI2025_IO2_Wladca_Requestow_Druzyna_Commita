@@ -7,7 +7,9 @@ int main() {
                         "Tester : Tobiasz Grala\n"
                         "Github : Pjongi\n"
                         "Developer : Szymon Pokora\n"
-                        "Github : SzymonPokora\n";
+                        "Github : SzymonPokora\n"
+                        "DevOps : Urszula Szmit\n"
+                        "Github : Urszula8\n";
 
     std::cout << msg << std::endl;
     
