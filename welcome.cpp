@@ -6,7 +6,7 @@
 #include "ArithmeticsDiv.hpp"
 
 int main() {
-    std::string msg =   "Group name : Wladca_Requestow_Druzyna_Commita\n" /* Zadanie 6 */
+    std::string msg =   "Group name : Wladca_Requestow_Druzyna_Commita\n"
                         "SCRUM Master : Tymoteusz Kot\n"
                         "Github : 252803@edu.p.lodz.pl\n"
                         "Tester : Tobiasz Grala\n"
