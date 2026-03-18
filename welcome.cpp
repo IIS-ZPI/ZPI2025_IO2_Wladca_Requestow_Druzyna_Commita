@@ -33,7 +33,7 @@ int main() {
     double mult_res = mathMult->Multiplication(5, 3); //6 7
     std::cout << "Multiplication result of [5 * 3] = " << mult_res << std::endl;
 
-    //DIVISION
+    /* DIVISION */
     IArithmeticsDiv *mathDiv = new ArithmeticsDiv();
     double div_res = mathDiv->Division(12, 2); //6 7
     std::cout << "Division result of [12 / 2] = " << div_res << std::endl;
