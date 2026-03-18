@@ -2,11 +2,13 @@
 
 #include <iostream>
 
+// NECCESARY HEADERS
 #include "ArithmeticsAdd.hpp"
 #include "ArithmeticsDiff.hpp"
 #include "ArithmeticsMult.hpp"
 #include "ArithmeticsDiv.hpp"
 
+// MAIN FUNCTION
 int main() {
     std::string msg =   "Group name : Wladca_Requestow_Druzyna_Commita\n"
                         "SCRUM Master : Tymoteusz Kot\n"
