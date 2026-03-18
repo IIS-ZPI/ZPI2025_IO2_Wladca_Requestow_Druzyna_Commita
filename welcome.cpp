@@ -25,7 +25,7 @@ int main() {
 
     /* SUBTRACTION */
     IArithmeticsDiff *mathDiff = new ArithmeticsDiff();
-    double diff_res = mathDiff->Difference(10, 4);
+    double diff_res = mathDiff->Difference(10, 4); // 6 7
     std::cout << "Subtraction result of [10 - 4] = " << diff_res << std::endl;
 
     /* MULTIPLICATION */
