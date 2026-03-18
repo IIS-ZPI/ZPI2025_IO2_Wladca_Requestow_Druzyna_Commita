@@ -35,7 +35,7 @@ int main() {
 
     //DIVISION
     IArithmeticsDiv *mathDiv = new ArithmeticsDiv();
-    double div_res = mathDiv->Division(12, 2);
+    double div_res = mathDiv->Division(12, 2); //6 7
     std::cout << "Division result of [12 / 2] = " << div_res << std::endl;
 
 
