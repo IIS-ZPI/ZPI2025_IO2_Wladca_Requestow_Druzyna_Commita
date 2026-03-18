@@ -25,12 +25,12 @@ int main() {
 
     /* SUBTRACTION */
     IArithmeticsDiff *mathDiff = new ArithmeticsDiff();
-    double diff_res = mathDiff->Difference(10, 4);
+    double diff_res = mathDiff->Difference(10, 4); // 6 7
     std::cout << "Subtraction result of [10 - 4] = " << diff_res << std::endl;
 
     /* MULTIPLICATION */
     IArithmeticsMult *mathMult = new ArithmeticsMult();
-    double mult_res = mathMult->Multiplication(5, 3);
+    double mult_res = mathMult->Multiplication(5, 3); //6 7
     std::cout << "Multiplication result of [5 * 3] = " << mult_res << std::endl;
 
     //DIVISION
