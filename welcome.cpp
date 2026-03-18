@@ -12,7 +12,7 @@ int main() {
                         "Tester : Tobiasz Grala\n"
                         "Github : Pjongi\n"
                         "Developer : Szymon Pokora\n"
-                        "Github : SzymonPokora\n"
+                        "Github : SzymonPokora\n" /* komentarz 3 */
                         "DevOps : Urszula Szmit\n"
                         "Github : Urszula8\n";
 
