@@ -12,6 +12,27 @@ int main() {
                         "Github : Urszula8\n";
 
     std::cout << msg << std::endl;
-    
+
+    /* ADDITION */
+    IArithmeticsAdd *mathAdd = new ArithmeticsAdd();
+    double add_res = mathAdd->Addition(5, 10);
+    std::cout << "Addition result of [5 + 10] = " << add_res << std::endl;
+
+    /* SUBTRACTION */
+    IArithmeticsDiff *mathDiff = new ArithmeticsDiff();
+    double diff_res = mathDiff->Difference(10, 4);
+    std::cout << "Subtraction result of [10 - 4] = " << diff_res << std::endl;
+
+    /* MULTIPLICATION */
+    IArithmeticsMult *mathMult = new ArithmeticsMult();
+    double mult_res = mathMult->Multiplication(5, 3);
+    std::cout << "Multiplication result of [5 * 3] = " << mult_res << std::endl;
+
+    /* DIVISION */
+    IArithmeticsDiv *mathDiv = new ArithmeticsDiv();
+    double div_res = mathDiv->Division(12, 2);
+    std::cout << "Division result of [12 / 2] = " << div_res << std::endl;
+
+
     return 0;
 }
