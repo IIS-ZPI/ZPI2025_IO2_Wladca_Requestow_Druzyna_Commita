@@ -11,8 +11,8 @@ int main() {
                         "Github : 252803@edu.p.lodz.pl\n"
                         "Tester : Tobiasz Grala\n"
                         "Github : Pjongi\n"
-                        "Developer : Szymon Pokora\n"
-                        "Github : SzymonPokora\n"
+                        "Developer : Szymon Pokora\n" /* komentarz 2 */
+                        "Github : SzymonPokora\n" /* komentarz 3 */
                         "DevOps : Urszula Szmit\n"
                         "Github : Urszula8\n";
 
