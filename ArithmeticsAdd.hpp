@@ -1,3 +1,5 @@
+// To jest komentarz, który za chwilę usunę przez revert
+
 #pragma once
 
 class IArithmeticsAdd {
