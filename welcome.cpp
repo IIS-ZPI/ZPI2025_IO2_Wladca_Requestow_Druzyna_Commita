@@ -30,7 +30,7 @@ int main() {
 
     /* MULTIPLICATION */
     IArithmeticsMult *mathMult = new ArithmeticsMult();
-    double mult_res = mathMult->Multiplication(5, 3);
+    double mult_res = mathMult->Multiplication(5, 3); //6 7
     std::cout << "Multiplication result of [5 * 3] = " << mult_res << std::endl;
 
     //DIVISION
