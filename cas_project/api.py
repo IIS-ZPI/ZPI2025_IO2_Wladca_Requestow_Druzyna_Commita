@@ -1,0 +1,22 @@
+import requests
+
+BASE_URL = "http://api.nbp.pl/api/exchangerates/rates/A"
+
+def fetch_currency_data(currency: str, sessions: int) -> list:
+    """
+    Fetches currency data from the NBP API.
+    We fetch `sessions + 1` to be able to calculate changes for the specified period.
+    NBP API allows topCount queries up to 255, which represents roughly 1 calendar year of business days.
+    """
+    count = sessions + 1
+    url = f"{BASE_URL}/{currency}/last/{count}/?format=json"
+    
+    try:
+         response = requests.get(url, timeout=10)
+         if response.status_code == 404:
+             return []
+         response.raise_for_status()
+         data = response.json()
+         return [item['mid'] for item in data['rates']]
+    except requests.exceptions.RequestException as e:
+         raise Exception(f"API Error fetching data for {currency}: {str(e)}")
