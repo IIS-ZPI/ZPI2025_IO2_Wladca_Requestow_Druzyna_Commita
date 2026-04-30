@@ -8,7 +8,7 @@
 2. GitHub Actions CI Environment (Automated Runner)
 
 **Tester's login and password:** Automated Pytest Suite / No authorization
-**Build number**: 2.1.1-rc1          **dated**: 2024-06-02
+**Build number**: 2.1.1-rc1          **dated**: 2026-04-30
 
 ### Application areas and types of tests performed:
 | Application area | Types of tests performed | Time spent on tests |

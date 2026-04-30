@@ -8,7 +8,7 @@
 2. Mocked API Endpoint Environment (Pytest with `unittest.mock.patch`)
 
 **Tester's login and password:** Automated Pytest Suite
-**Build number**: 2.1.3          **dated**: 2024-06-04
+**Build number**: 2.1.3          **dated**: 2026-04-30
 
 ### Application areas and types of tests performed:
 | Application area | Types of tests performed | Time spent on tests |
