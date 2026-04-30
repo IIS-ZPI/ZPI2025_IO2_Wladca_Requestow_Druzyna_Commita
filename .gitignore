@@ -1,3 +1,4 @@
 /.vscode/*
 /cas_project/__pycache__/*
 /cas_project/*.csv
+/.pytest_cache/*
