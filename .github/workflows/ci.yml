@@ -22,4 +22,4 @@ jobs:
     - name: Run Pytest
       run: |
         cd cas_project
-        pytest tests/
+        pytest test/
