@@ -8,7 +8,7 @@
 2. Pytest Automated Test Runner
 
 **Tester's login and password:** Automated Pytest Suite
-**Build number**: 2.2.3          **dated**: 2024-06-05
+**Build number**: 2.2.3          **dated**: 2026-04-30
 
 ### Application areas and types of tests performed:
 | Application area | Types of tests performed | Time spent on tests |
