@@ -11,14 +11,14 @@ Currency Analytics System (CAS) is a command-line application (CLI) written in P
 Ensure you have Python installed. 
 Note: No explicit external API keys are required as the NBP API is open.
 
-1. Install dependencies:
-   `pip install -r requirements.txt`
-2. Navigate to the project directory:
+1. Navigate to the project directory:
    `cd cas_project`
+2. Install dependencies:
+   `pip install -r requirements.txt`
 3. Run the CLI tool:
    `python main.py`
 
 ## Documentation & Scrum Backlog
 - **Documentation**: All required documentation, including architecture and test reports, can be found in the `cas_project/docs/` folder.
-- **Test Reports**: Found inside `cas_project/docs/test_reports/` directory.
+- **Test Reports**: Found inside `cas_project/test/test_reports/` directory.
 - **Backlog**: The project backlog and current issue status can be accessed via: [Jira Backlog](https://cas-project-wladca-requestow-druzyna-commita.atlassian.net/jira/software/projects/WRDC)

@@ -1,4 +1,5 @@
-/.vscode/*
-/cas_project/__pycache__/*
+/.vscode
+/cas_project/__pycache__
+/cas_project/test/__pycache__
 /cas_project/*.csv
-/.pytest_cache/*
+/.pytest_cache
