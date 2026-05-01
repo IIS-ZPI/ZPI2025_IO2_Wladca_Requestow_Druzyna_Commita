@@ -100,22 +100,42 @@ def main():
 
         elif choice == "3":
             pair = input("Enter Currency Pair (e.g., EUR/USD): ").strip().upper()
-            if "/" not in pair:
+            
+            # Fixing the bug with redundant or missing characters (double slash test)
+            # Zmiana: System automatycznie redukuje wielokrotne ukośniki przed walidacją
+            while "//" in pair:
+                pair = pair.replace("//", "/")
+                
+            if pair.count("/") != 1:
                 print("Invalid format. Use XXX/YYY format.")
                 continue
+                
             c1, c2 = pair.split("/")
+            if not c1 or not c2:
+                print("Invalid format. Missing currency code.")
+                continue
             
             days = get_period(limit_to_months=True)
             if not days: continue
             
             try:
+                # Short-circuit evaluation. API is called for c2 ONLY if c1 succeeded.
                 rates1 = fetch_currency_data(c1, days)
+                if not rates1:
+                    print(f"Error: Unable to fetch data for {c1}. Try again.")
+                    continue
+                    
                 rates2 = fetch_currency_data(c2, days)
-                if not rates1 or not rates2:
-                    print("Error: Unable to fetch data for given pair. Try again.")
+                if not rates2:
+                    print(f"Error: Unable to fetch data for {c2}. Try again.")
                     continue
                 
                 ranges = distribution_of_changes(rates1, rates2)
+                
+                if not ranges:
+                    print("Not enough data to calculate distribution.")
+                    continue
+                    
                 print(f"\n--- Distribution of Changes for {pair} ---")
                 print(f"{'Range Start':>12} - {'Range End':<12} | {'Count':^5} | Histogram")
                 print("-" * 65)
@@ -132,8 +152,6 @@ def main():
                     export_to_csv(csv_data, f"distribution_output_{c1}_{c2}.csv")
             except Exception as e:
                 print(f"\nSystem Error: {e}\nTry again.")
-        else:
-            print("Invalid input, please select 1, 2, 3, or 4.")
 
 if __name__ == "__main__":
     main()

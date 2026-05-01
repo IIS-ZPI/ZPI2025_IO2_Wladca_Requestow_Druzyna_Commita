@@ -136,8 +136,8 @@ def test_json_schema_fatal_crashes(mock_get, payload, expected_exception):
 
 # =====================================================================
 # BLOCK 5: SILENT DATA POISONING (5 Tests)
-# These tests represent the MOST DANGEROUS bugs. The code doesn't crash,
-# but it leaks garbage data (strings, lists, booleans) into the financial calculations.
+# These tests verify that the application correctly rejects garbage data
+# (strings, lists, booleans) and prevents it from leaking into calculations.
 # =====================================================================
 
 SILENT_POISON_PAYLOADS = [
@@ -148,21 +148,18 @@ SILENT_POISON_PAYLOADS = [
     {"rates": [{"mid": {"val": 4.1}}]},  # Dict leak
 ]
 
-
 @pytest.mark.parametrize("payload", SILENT_POISON_PAYLOADS)
 @patch("api.requests.get")
 def test_json_silent_data_poisoning(mock_get, payload):
-    """Testing if the API module allows non-float garbage data to pass through."""
+    """Testing if the API module correctly blocks non-float garbage data."""
     mock_response = mock_get.return_value
     mock_response.status_code = 200
     mock_response.json.return_value = payload
 
-    data = fetch_currency_data("USD", 1)
-
-    # If the data array contains anything that isn't a strict float, the test passes
-    # (meaning we successfully proved the code is vulnerable to poisoning).
-    is_poisoned = not isinstance(data[0], float) or isinstance(data[0], bool)
-    assert is_poisoned, "The application failed to sanitize incoming data types."
+    # We expect the application to defend itself by raising a TypeError
+    # when it encounters invalid data types instead of silently passing them.
+    with pytest.raises(TypeError, match="must be a valid number"):
+        fetch_currency_data("USD", 1)
 
 
 # =====================================================================

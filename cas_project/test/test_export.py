@@ -2,20 +2,21 @@ import pytest
 import csv
 import os
 from unittest.mock import patch
-from export import export_to_csv
+from export import export_to_csv  # Ensure the module name matches your actual file (e.g., export or exporty)
 
 # =====================================================================
 # BLOCK 1: DATA STRUCTURE MUTILATION (Fuzzing)
-# Current export.py assumes data[0].keys() will always work.
+# Testing if export_to_csv correctly rejects invalid data structures.
 # =====================================================================
 
 DATA_POISONING_PAYLOADS = [
     # 1. Root structure is not a list/iterable
     (12345, TypeError),
     (True, TypeError),
-    ({"key": "val"}, KeyError),  # Indexing [0] on a dict raises KeyError
-    ("string_data", AttributeError),  # string[0] is 's', 's'.keys() throws AttributeError
-    (set([1, 2, 3]), TypeError),  # Sets do not support indexing
+    # Converting dict to list gives a list of keys (strings), not dicts, so it raises AttributeError
+    ({"key": "val"}, AttributeError),  
+    ("string_data", AttributeError),   
+    (set([1, 2, 3]), AttributeError),  
 
     # 2. Structure is a list, but elements are NOT dicts
     ([1, 2, 3], AttributeError),
@@ -25,6 +26,7 @@ DATA_POISONING_PAYLOADS = [
     ([4.15], AttributeError),
 
     # 3. First element is a dict, but subsequent elements are garbage
+    # Loops will attempt to call .values() on these invalid types
     ([{"a": 1}, None], AttributeError),
     ([{"a": 1}, [1, 2]], AttributeError),
     ([{"a": 1}, 1234], AttributeError),
@@ -34,13 +36,9 @@ DATA_POISONING_PAYLOADS = [
     ([{"a": 1}, {"a": 1, "b": 2}], ValueError),  # ValueError: dict contains fields not in fieldnames
 ]
 
-
 @pytest.mark.parametrize("payload, expected_exc", DATA_POISONING_PAYLOADS)
 def test_export_data_structure_fuzzing(tmp_path, payload, expected_exc):
-    """
-    Bombards export_to_csv with 15 malformed data structures.
-    Expects native Python crashes because export.py lacks schema validation.
-    """
+    """Verifies that the export gracefully rejects malformed inputs with correct exceptions."""
     file_path = tmp_path / "fuzz.csv"
     with pytest.raises(expected_exc):
         export_to_csv(payload, str(file_path))
@@ -48,7 +46,6 @@ def test_export_data_structure_fuzzing(tmp_path, payload, expected_exc):
 
 # =====================================================================
 # BLOCK 2: FILENAME PARAMETER MUTILATION
-# Current export.py assumes filename is a valid string.
 # =====================================================================
 
 FILENAME_PAYLOADS = [
@@ -59,7 +56,6 @@ FILENAME_PAYLOADS = [
     ([{"a": 1}], {"file": "test.csv"}, TypeError),
 ]
 
-
 @pytest.mark.parametrize("data, bad_filename, expected_exc", FILENAME_PAYLOADS)
 def test_export_filename_type_fuzzing(data, bad_filename, expected_exc):
     """Tests vulnerability to bad argument types for the filename."""
@@ -69,53 +65,55 @@ def test_export_filename_type_fuzzing(data, bad_filename, expected_exc):
 
 # =====================================================================
 # BLOCK 3: FILESYSTEM & OS FAILURES (I/O Mocking)
-# Current export.py has NO try...except block around with open()
 # =====================================================================
 
 FS_FAILURES = [
-    (PermissionError("Access denied"), PermissionError),
-    (IsADirectoryError("Is a directory"), IsADirectoryError),
-    (FileNotFoundError("No such file or directory"), FileNotFoundError),
-    (OSError("Disk full"), OSError),
+    PermissionError("Access denied"),
+    IsADirectoryError("Is a directory"),
+    FileNotFoundError("No such file or directory"),
+    OSError("Disk full"),
 ]
 
-
-@pytest.mark.parametrize("mock_exc, expected_exc", FS_FAILURES)
-def test_export_os_level_failures(mock_exc, expected_exc):
+@pytest.mark.parametrize("mock_exc", FS_FAILURES)
+def test_export_os_level_failures_handled(mock_exc):
     """
-    Simulates catastrophic OS events (e.g., trying to save to a read-only drive).
-    Because export_to_csv lacks I/O wrappers, the app will crash and data will be lost.
+    Simulates catastrophic OS events.
+    Verifies that export_to_csv catches these exceptions and prevents application crashes.
     """
     with patch("builtins.open", side_effect=mock_exc):
-        with pytest.raises(expected_exc):
+        try:
             export_to_csv([{"a": 1}], "C:/protected_folder/test.csv")
+        except Exception as e:
+            pytest.fail(f"APPLICATION CRASHED: export_to_csv failed to gracefully handle {type(e).__name__}!")
 
 
 # =====================================================================
-# BLOCK 4: LOGICAL BUGS & DATA LEAKS
+# BLOCK 4: LOGICAL BEHAVIORS & DATA DEFENSE
 # =====================================================================
 
-def test_export_generator_crash(tmp_path):
-    """CRASH: Iterators/Generators don't have __getitem__[0] support."""
+def test_export_generator_success(tmp_path):
+    """SUCCESS TEST: Verifies that Iterators/Generators are safely converted to lists."""
     gen = (x for x in [{"a": 1}, {"a": 2}])
     file_path = tmp_path / "gen.csv"
-    with pytest.raises(TypeError):
-        export_to_csv(gen, str(file_path))
+    
+    # This should no longer crash, it should succeed
+    export_to_csv(gen, str(file_path))
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        assert "a" in content and "1" in content and "2" in content
 
 
-def test_export_nested_structures_leak(tmp_path):
+def test_export_nested_structures_blocked(tmp_path):
     """
-    LOGICAL BUG: Values contain nested dictionaries.
-    CSV writer will just write the Python string representation: "{'nested': [1, 2]}"
-    This corrupts the CSV file for external parsers (like Excel).
+    DEFENSE TEST: Ensures that dictionaries with nested structures raise a ValueError
+    instead of leaking raw string representations into the CSV.
     """
     data = [{"Metric": "Stats", "Value": {"nested": [1, 2, 3]}}]
     file_path = tmp_path / "nested.csv"
-    export_to_csv(data, str(file_path))
-
-    with open(file_path, "r") as f:
-        content = f.read()
-        assert "{'nested': [1, 2, 3]}" in content, "Data leak: nested objects printed as raw strings."
+    
+    with pytest.raises(ValueError, match="Nested structures are not allowed"):
+        export_to_csv(data, str(file_path))
 
 
 def test_export_empty_data_handled_gracefully():
@@ -126,9 +124,7 @@ def test_export_empty_data_handled_gracefully():
 
 
 # =====================================================================
-# BLOCK 5: THE GUARANTEED FAILURE (Red Test)
-# This test asserts that the application SHOULD handle Permission Errors gracefully.
-# Since export.py does NOT handle it, this test will FAIL in Pytest.
+# BLOCK 5: THE CRITICAL FAILURE TEST
 # =====================================================================
 
 def test_export_handles_permission_error_gracefully():
