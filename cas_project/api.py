@@ -2,6 +2,11 @@ import requests
 
 BASE_URL = "http://api.nbp.pl/api/exchangerates/rates/A"
 
+
+class DataParsingError(Exception):
+    """Raised when the NBP API response cannot be validated or parsed."""
+
+
 def fetch_currency_data(currency: str, sessions: int) -> list:
     """
     Fetches currency data from the NBP API.
