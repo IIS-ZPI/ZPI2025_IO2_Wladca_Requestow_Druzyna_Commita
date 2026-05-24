@@ -7,6 +7,22 @@ class DataParsingError(Exception):
     """Raised when the NBP API response cannot be validated or parsed."""
 
 
+def _validate_rates_payload(data) -> list:
+    if not isinstance(data, dict):
+        raise DataParsingError("JSON response must be an object")
+    if "rates" not in data:
+        raise DataParsingError("Missing 'rates' in JSON response")
+    rates = data["rates"]
+    if not isinstance(rates, list):
+        raise DataParsingError("'rates' must be a list")
+    for index, item in enumerate(rates):
+        if not isinstance(item, dict):
+            raise DataParsingError(f"Rate item at index {index} must be an object")
+        if "mid" not in item:
+            raise DataParsingError(f"Missing 'mid' in rate item at index {index}")
+    return rates
+
+
 def fetch_currency_data(currency: str, sessions: int) -> list:
     """
     Fetches currency data from the NBP API.
