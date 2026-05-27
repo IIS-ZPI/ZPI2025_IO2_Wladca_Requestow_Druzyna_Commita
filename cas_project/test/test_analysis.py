@@ -8,10 +8,12 @@ from analysis import session_analysis, statistical_measures, distribution_of_cha
 # =====================================================================
 
 def test_sa_with_strings():
-    """CRASH: Fails due to comparing string with float."""
+    """Strings should be ignored by sanitization, not crash the function."""
     rates = [4.1, 4.2, "4.3", 4.4]
-    with pytest.raises(TypeError):
-        session_analysis(rates)
+    rises, falls, unchanged = session_analysis(rates)
+    assert rises == 2
+    assert falls == 0
+    assert unchanged == 0
 
 def test_sa_with_nan_silent_logic_bug():
     """
@@ -25,11 +27,11 @@ def test_sa_with_nan_silent_logic_bug():
     assert unchanged == 0, "Code incorrectly categorized NaN as 'unchanged'!"
 
 def test_sa_with_infinity():
-    """Checking behavior with math.inf (e.g., hyperinflation data anomaly)."""
+    """Infinity should be filtered out before comparisons."""
     rates = [4.1, math.inf, 4.2]
     rises, falls, unchanged = session_analysis(rates)
-    assert rises == 1   # 4.1 to Inf
-    assert falls == 1   # Inf to 4.2
+    assert rises == 1   # 4.1 to 4.2 after sanitization
+    assert falls == 0
     assert unchanged == 0
 
 def test_sa_micro_float_differences():
@@ -52,14 +54,17 @@ def test_sa_boolean_injection():
     """
     rates = [True, False, True]
     rises, falls, unchanged = session_analysis(rates)
-    assert falls == 1 # True to False
-    assert rises == 1 # False to True
+    assert falls == 0
+    assert rises == 0
+    assert unchanged == 0
 
 def test_sa_generator_instead_of_list():
-    """CRASH: The function expects a list (uses len() and indexing), passing a generator breaks it."""
+    """Generator input should work after sanitization converts to filtered list."""
     rates_gen = (x for x in [4.1, 4.2, 4.3])
-    with pytest.raises(TypeError):
-        session_analysis(rates_gen)
+    rises, falls, unchanged = session_analysis(rates_gen)
+    assert rises == 2
+    assert falls == 0
+    assert unchanged == 0
 
 def test_sa_all_identical_large_dataset():
     """Performance & logic check for completely flat data."""
@@ -90,10 +95,10 @@ def test_sm_almost_zero_mean():
     assert stats["coefficient_of_variation"] < 1e100, "Coefficient of variation exploded due to near-zero mean!"
 
 def test_sm_overflow_variance():
-    """CRASH: extremely large numbers can cause OverflowError in stdev calculation."""
+    """Large values should not crash the statistics routine."""
     rates = [1.0, 1e250, -1e250] # 1.0 is dropped
-    with pytest.raises(OverflowError):
-         statistical_measures(rates)
+    stats = statistical_measures(rates)
+    assert "standard_deviation" in stats
 
 def test_sm_exact_same_elements():
     """Checks fallback logic when standard deviation is exactly 0."""
@@ -124,19 +129,21 @@ def test_sm_two_elements_zero_mean():
     assert stats["coefficient_of_variation"] == 0.0
 
 def test_sm_string_contamination():
-    """CRASH: statistics module cannot process strings."""
+    """String values should be filtered before statistics are computed."""
     rates = [1.0, 2.0, "3.0"]
-    with pytest.raises(TypeError):
-        statistical_measures(rates)
+    stats = statistical_measures(rates)
+    assert stats["median"] == 2.0
+    assert stats["mode"] == 2.0
 
 # =====================================================================
 # PART 3: DESTRUCTIVE TESTS FOR distribution_of_changes
 # =====================================================================
 
 def test_doc_divide_by_zero_in_base_currency():
-    """CRASH: rates2 contains 0, causing ZeroDivisionError during cross_rates generation."""
-    with pytest.raises(ZeroDivisionError):
-        distribution_of_changes([4.0, 4.0, 4.0], [1.0, 0.0, 1.0])
+    """Division by zero rows should be skipped in cross-rate generation."""
+    ranges = distribution_of_changes([4.0, 4.0, 4.0], [1.0, 0.0, 1.0])
+    total_count = sum(r['count'] for r in ranges)
+    assert total_count == 1
 
 def test_doc_empty_rates1():
     """Checks how it handles completely empty input for the primary currency."""
