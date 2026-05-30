@@ -2,7 +2,7 @@ import pytest
 import requests
 import math
 from unittest.mock import patch
-from api import fetch_currency_data
+from api import DataParsingError, fetch_currency_data
 
 # =====================================================================
 # BLOCK 1: PRE-FLIGHT INPUT MUTILATION (10 Tests)
@@ -89,55 +89,51 @@ def test_http_status_code_anomalies(mock_get, code, reason):
 # =====================================================================
 # BLOCK 4: JSON SCHEMA POISONING - CRASHES (15 Tests)
 # These simulate NBP changing their API format or returning corrupted JSON.
-# CURRENT BUG: api.py blindly accesses `data['rates']` and `item['mid']`.
 # =====================================================================
 
 FATAL_JSON_PAYLOADS = [
     # 1. Structural anomalies (Not dictionaries)
-    ([], TypeError),
-    ("Not JSON", TypeError),
-    (1234, TypeError),
+    [],
+    "Not JSON",
+    1234,
 
     # 2. Missing root keys
-    ({}, KeyError),
-    ({"table": "A", "currency": "USD"}, KeyError),  # Missing 'rates'
-    ({"RATES": [{"mid": 4.1}]}, KeyError),  # Case sensitive failure
+    {},
+    {"table": "A", "currency": "USD"},  # Missing 'rates'
+    {"RATES": [{"mid": 4.1}]},  # Case sensitive failure
 
     # 3. 'rates' is present but wrong type
-    ({"rates": None}, TypeError),
-    ({"rates": "Unavailable"}, TypeError),
-    ({"rates": {"date": 4.1}}, TypeError),  # Dict instead of list
+    {"rates": None},
+    {"rates": "Unavailable"},
+    {"rates": {"date": 4.1}},  # Dict instead of list
 
     # 4. 'rates' is a list, but items are wrong type
-    ({"rates": [None]}, TypeError),
-    ({"rates": [4.1, 4.2]}, TypeError),
-    ({"rates": ["4.1", "4.2"]}, TypeError),
+    {"rates": [None]},
+    {"rates": [4.1, 4.2]},
+    {"rates": ["4.1", "4.2"]},
 
     # 5. Items are dicts, but 'mid' is missing/wrong
-    ({"rates": [{"ask": 4.1}]}, KeyError),  # Missing 'mid'
-    ({"rates": [{"MID": 4.1}]}, KeyError),  # Case sensitive failure
-    ({"rates": [{}]}, KeyError),  # Empty dict
+    {"rates": [{"ask": 4.1}]},  # Missing 'mid'
+    {"rates": [{"MID": 4.1}]},  # Case sensitive failure
+    {"rates": [{}]},  # Empty dict
 ]
 
 
-@pytest.mark.parametrize("payload, expected_exception", FATAL_JSON_PAYLOADS)
+@pytest.mark.parametrize("payload", FATAL_JSON_PAYLOADS)
 @patch("api.requests.get")
-def test_json_schema_fatal_crashes(mock_get, payload, expected_exception):
-    """Testing how the code handles fundamentally broken JSON structures."""
+def test_json_schema_fatal_crashes(mock_get, payload):
+    """Broken JSON structures must raise DataParsingError instead of native errors."""
     mock_response = mock_get.return_value
     mock_response.status_code = 200
     mock_response.json.return_value = payload
 
-    # The current api.py will violently crash with native Python errors here,
-    # because it lacks basic dictionary/list validation.
-    with pytest.raises(expected_exception):
+    with pytest.raises(DataParsingError):
         fetch_currency_data("USD", 1)
 
 
 # =====================================================================
 # BLOCK 5: SILENT DATA POISONING (5 Tests)
-# These tests represent the MOST DANGEROUS bugs. The code doesn't crash,
-# but it leaks garbage data (strings, lists, booleans) into the financial calculations.
+# Non-numeric mid values must be rejected before reaching analysis.
 # =====================================================================
 
 SILENT_POISON_PAYLOADS = [
@@ -152,17 +148,13 @@ SILENT_POISON_PAYLOADS = [
 @pytest.mark.parametrize("payload", SILENT_POISON_PAYLOADS)
 @patch("api.requests.get")
 def test_json_silent_data_poisoning(mock_get, payload):
-    """Testing if the API module allows non-float garbage data to pass through."""
+    """Invalid mid types must raise DataParsingError instead of leaking into analysis."""
     mock_response = mock_get.return_value
     mock_response.status_code = 200
     mock_response.json.return_value = payload
 
-    data = fetch_currency_data("USD", 1)
-
-    # If the data array contains anything that isn't a strict float, the test passes
-    # (meaning we successfully proved the code is vulnerable to poisoning).
-    is_poisoned = not isinstance(data[0], float) or isinstance(data[0], bool)
-    assert is_poisoned, "The application failed to sanitize incoming data types."
+    with pytest.raises(DataParsingError):
+        fetch_currency_data("USD", 1)
 
 
 # =====================================================================
