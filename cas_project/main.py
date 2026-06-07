@@ -100,18 +100,23 @@ def main():
 
         elif choice == "3":
             pair = input("Enter Currency Pair (e.g., EUR/USD): ").strip().upper()
-            if "/" not in pair:
+            parts = [segment.strip() for segment in pair.split("/") if segment.strip()]
+            if len(parts) != 2:
                 print("Invalid format. Use XXX/YYY format.")
                 continue
-            c1, c2 = pair.split("/")
+            c1, c2 = parts
             
             days = get_period(limit_to_months=True)
             if not days: continue
             
             try:
                 rates1 = fetch_currency_data(c1, days)
+                if not rates1:
+                    print("Error: Unable to fetch data for given pair. Try again.")
+                    continue
+
                 rates2 = fetch_currency_data(c2, days)
-                if not rates1 or not rates2:
+                if not rates2:
                     print("Error: Unable to fetch data for given pair. Try again.")
                     continue
                 

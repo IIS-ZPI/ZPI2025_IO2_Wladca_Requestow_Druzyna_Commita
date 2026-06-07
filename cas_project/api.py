@@ -41,6 +41,13 @@ def fetch_currency_data(currency: str, sessions: int) -> list:
     We fetch `sessions + 1` to be able to calculate changes for the specified period.
     NBP API allows topCount queries up to 255, which represents roughly 1 calendar year of business days.
     """
+    if not isinstance(currency, str):
+         raise TypeError("currency must be a string")
+    if not isinstance(sessions, int) or isinstance(sessions, bool):
+         raise TypeError("sessions must be an integer")
+    if sessions < 0:
+         raise ValueError("sessions must be a non-negative integer")
+
     count = sessions + 1
     url = f"{BASE_URL}/{currency}/last/{count}/?format=json"
     
