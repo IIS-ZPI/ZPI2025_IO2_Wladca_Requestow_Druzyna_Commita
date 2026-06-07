@@ -64,8 +64,11 @@ def statistical_measures(rates: list) -> dict:
 
     if n > 1:
          std_dev = statistics.stdev(valid_rates)
-         if not math.isfinite(std_dev) or (any(abs(x) > 1e200 for x in valid_rates) and abs(std_dev) > 1e200):
-             raise OverflowError("Overflow encountered in standard deviation calculation")
+         if not math.isfinite(std_dev):
+             raise OverflowError("Calculation exceeded maximum numerical bounds")
+         variance = std_dev * std_dev
+         if math.isinf(std_dev) or math.isinf(variance):
+             raise OverflowError("Calculation exceeded maximum numerical bounds")
          mean_val = statistics.mean(valid_rates)
          if not math.isfinite(mean_val) or abs(mean_val) < 1e-9:
              coef_var = 0.0
