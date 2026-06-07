@@ -116,22 +116,34 @@ def distribution_of_changes(rates1: list, rates2: list) -> list:
     min_c = min(changes)
     max_c = max(changes)
 
-    interval_size = (max_c - min_c) / 13
-    if not math.isfinite(interval_size) or interval_size == 0:
-         interval_size = 0.0001 # Fallback to prevent divide by zero or invalid intervals
-         min_c = 0.0
-         max_c = 0.0
-
-    ranges = []
-    for i in range(13):
-         start_val = min_c + i * interval_size
-         end_val = start_val + interval_size
-         ranges.append({"start": start_val, "end": end_val, "count": 0})
+    if min_c == max_c:
+         center_value = min_c
+         magnitude = abs(center_value) if abs(center_value) > 0 else 1.0
+         interval_size = magnitude * 0.0001
+         start_base = center_value - 6.5 * interval_size
+         ranges = []
+         for i in range(13):
+             start_val = start_base + i * interval_size
+             end_val = start_val + interval_size
+             ranges.append({"start": start_val, "end": end_val, "count": 0})
+    else:
+         interval_size = (max_c - min_c) / 13
+         if not math.isfinite(interval_size) or interval_size == 0:
+             fallback_mag = max(abs(min_c), abs(max_c), 1.0)
+             interval_size = fallback_mag * 0.0001
+         ranges = []
+         for i in range(13):
+             start_val = min_c + i * interval_size
+             end_val = start_val + interval_size
+             ranges.append({"start": start_val, "end": end_val, "count": 0})
 
     for c in changes:
          if not math.isfinite(c):
              continue
-         index = int((c - min_c) / interval_size)
+         if min_c == max_c:
+             index = int((c - (center_value - 6.5 * interval_size)) / interval_size)
+         else:
+             index = int((c - min_c) / interval_size)
          if index < 0:
              index = 0
          elif index >= 13:
