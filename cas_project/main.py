@@ -68,11 +68,12 @@ def main():
                 print(f"Unchanged sessions: {unchanged}")
                 
                 if input("Export results to CSV? (Y/N): ").strip().upper() == 'Y':
-                    export_to_csv([
+                    if not export_to_csv([
                         {"Metric": "Rising", "Value": rises},
                         {"Metric": "Falling", "Value": falls},
                         {"Metric": "Unchanged", "Value": unchanged}
-                    ], f"session_output_{curr}.csv")
+                    ], f"session_output_{curr}.csv"):
+                        print("Export failed.")
             except Exception as e:
                 print(f"\nSystem Error: {e}\nTry again.")
 
@@ -94,7 +95,8 @@ def main():
                     print(f"{k.replace('_', ' ').capitalize()}: {v:.4f}")
                     
                 if input("Export results to CSV? (Y/N): ").strip().upper() == 'Y':
-                    export_to_csv([{"Metric": k, "Value": v} for k, v in stats.items()], f"stats_output_{curr}.csv")
+                    if not export_to_csv([{"Metric": k, "Value": v} for k, v in stats.items()], f"stats_output_{curr}.csv"):
+                        print("Export failed.")
             except Exception as e:
                 print(f"\nSystem Error: {e}\nTry again.")
 
@@ -134,7 +136,8 @@ def main():
                     csv_data.append({"Range Start": start_str, "Range End": end_str, "Count": r['count']})
                     
                 if input("Export results to CSV? (Y/N): ").strip().upper() == 'Y':
-                    export_to_csv(csv_data, f"distribution_output_{c1}_{c2}.csv")
+                    if not export_to_csv(csv_data, f"distribution_output_{c1}_{c2}.csv"):
+                        print("Export failed.")
             except Exception as e:
                 print(f"\nSystem Error: {e}\nTry again.")
         else:

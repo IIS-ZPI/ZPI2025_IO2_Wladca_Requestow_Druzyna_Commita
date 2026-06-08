@@ -36,13 +36,17 @@ DATA_POISONING_PAYLOADS = [
 
 
 @pytest.mark.parametrize("payload, _", DATA_POISONING_PAYLOADS)
-def test_export_data_structure_fuzzing(tmp_path, payload, _):
+def test_export_data_structure_fuzzing(tmp_path, payload, _, capsys):
     """
     Bombards export_to_csv with 15 malformed data structures.
     The function should handle invalid schema gracefully and not crash.
     """
     file_path = tmp_path / "fuzz.csv"
-    export_to_csv(payload, str(file_path))
+    result = export_to_csv(payload, str(file_path))
+    captured = capsys.readouterr()
+
+    assert result is False
+    assert "Invalid data schema" in captured.out or "No data available to export." in captured.out
 
 
 # =====================================================================
@@ -97,7 +101,11 @@ def test_export_generator_crash(tmp_path):
     """CRASH: Iterators/Generators don't have __getitem__[0] support."""
     gen = (x for x in [{"a": 1}, {"a": 2}])
     file_path = tmp_path / "gen.csv"
-    export_to_csv(gen, str(file_path))
+    result = export_to_csv(gen, str(file_path))
+    assert result is True
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    assert "a" in content
 
 
 def test_export_nested_structures_leak(tmp_path):
@@ -116,10 +124,9 @@ def test_export_nested_structures_leak(tmp_path):
 
 
 def test_export_empty_data_handled_gracefully():
-    """Valid edge case: Data is empty. Code correctly checks 'if not data:'"""
-    # This should NOT crash
-    export_to_csv([], "does_not_matter.csv")
-    export_to_csv(None, "does_not_matter.csv")
+    """Valid edge case: Data is empty. Code correctly checks 'if not data.'"""
+    assert export_to_csv([], "does_not_matter.csv") is False
+    assert export_to_csv(None, "does_not_matter.csv") is False
 
 
 # =====================================================================
@@ -135,7 +142,5 @@ def test_export_handles_permission_error_gracefully():
     without crashing the entire program.
     """
     with patch("builtins.open", side_effect=PermissionError):
-        try:
-            export_to_csv([{"a": 1}], "restricted.csv")
-        except PermissionError:
-            pytest.fail("APPLICATION CRASHED: export_to_csv failed to gracefully handle an OS PermissionError!")
+        result = export_to_csv([{"a": 1}], "restricted.csv")
+        assert result is False
