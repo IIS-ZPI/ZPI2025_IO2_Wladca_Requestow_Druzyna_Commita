@@ -1,23 +1,25 @@
 import math
 import statistics
+from models import SessionResult, StatisticalResult, DistributionRange
 
-def session_analysis(rates: list) -> tuple:
-    """
-    Calculates the number of rising, falling, and unchanged sessions.
-    """
+def _get_val(item):
+    if hasattr(item, 'mid'):
+        return item.mid
+    return item
+
+def session_analysis(rates: list) -> SessionResult:
     if not isinstance(rates, list):
         raise TypeError("rates must be a list")
     if len(rates) < 2:
-        return 0, 0, 0
+        return SessionResult(0, 0, 0)
 
     rises, falls, unchanged = 0, 0, 0
-    # Start loop from index 1 and compare to index 0
     for i in range(1, len(rates)):
-        prev = rates[i-1]
-        curr = rates[i]
+        prev = _get_val(rates[i-1])
+        curr = _get_val(rates[i])
 
         if not isinstance(prev, (int, float)) or not isinstance(curr, (int, float)):
-            raise TypeError("rates values must be numeric")
+            raise TypeError("rates mid values must be numeric")
         if math.isnan(prev) or math.isnan(curr):
             continue
 
@@ -28,31 +30,24 @@ def session_analysis(rates: list) -> tuple:
         else:
             unchanged += 1
 
-    return rises, falls, unchanged
+    return SessionResult(rising=rises, falling=falls, unchanged=unchanged)
 
-def statistical_measures(rates: list) -> dict:
-    """
-    Calculates median, mode, sample standard deviation, and coefficient of variation.
-    The calculations are done on the actual fetched periods.
-    """
-    # Exclude the first "extra" element we grabbed for difference calculations
-    # to maintain strict exact period calculations
+def statistical_measures(rates: list) -> StatisticalResult:
     target_rates = rates[1:] if len(rates) > 1 else rates
 
     if not target_rates:
-         return {}
+         return StatisticalResult(0.0, 0.0, 0.0, 0.0)
 
-    if any(not isinstance(x, (int, float)) for x in target_rates):
-         raise TypeError("rates values must be numeric")
+    valid_rates = []
+    for x in target_rates:
+         val = _get_val(x)
+         if not isinstance(val, (int, float)):
+             raise TypeError("rates items must be numeric")
+         if math.isfinite(val):
+             valid_rates.append(float(val))
 
-    valid_rates = [float(x) for x in target_rates if math.isfinite(x)]
     if not valid_rates:
-         return {
-             "median": 0.0,
-             "mode": 0.0,
-             "standard_deviation": 0.0,
-             "coefficient_of_variation": 0.0
-         }
+         return StatisticalResult(0.0, 0.0, 0.0, 0.0)
 
     n = len(valid_rates)
     median = statistics.median(valid_rates)
@@ -60,15 +55,15 @@ def statistical_measures(rates: list) -> dict:
     try:
          mode = statistics.mode(valid_rates)
     except statistics.StatisticsError:
-         mode = valid_rates[0] # Fallback in case of multi-modal
+         mode = valid_rates[0]
 
     if n > 1:
          std_dev = statistics.stdev(valid_rates)
          if not math.isfinite(std_dev):
-             raise OverflowError("Calculation exceeded maximum numerical bounds")
+             raise OverflowError("Calculation exceeded maximum bounds")
          variance = std_dev * std_dev
          if not math.isfinite(variance):
-             raise OverflowError("Calculation exceeded maximum numerical bounds")
+             raise OverflowError("Calculation exceeded maximum bounds")
          mean_val = statistics.mean(valid_rates)
          if not math.isfinite(mean_val) or abs(mean_val) < 1e-9:
              coef_var = 0.0
@@ -77,27 +72,24 @@ def statistical_measures(rates: list) -> dict:
     else:
          std_dev, coef_var = 0.0, 0.0
 
-    return {
-         "median": round(median, 4),
-         "mode": round(mode, 4),
-         "standard_deviation": round(std_dev, 4),
-         "coefficient_of_variation": round(coef_var, 4)
-    }
+    return StatisticalResult(
+         median=round(median, 4),
+         mode=round(mode, 4),
+         standard_deviation=round(std_dev, 4),
+         coefficient_of_variation=round(coef_var, 4)
+    )
 
 def distribution_of_changes(rates1: list, rates2: list) -> list:
-    """
-    Calculates distribution of cross-rate changes, splitting into 13 equal intervals.
-    """
     n = min(len(rates1), len(rates2))
     if n == 0:
          return []
 
     cross_rates = []
     for i in range(n):
-         a = rates1[i]
-         b = rates2[i]
+         a = _get_val(rates1[i])
+         b = _get_val(rates2[i])
          if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
-             raise TypeError("rates values must be numeric")
+             raise TypeError("rates mid values must be numeric")
          if not math.isfinite(a) or not math.isfinite(b):
              continue
          if b == 0:
@@ -119,26 +111,25 @@ def distribution_of_changes(rates1: list, rates2: list) -> list:
     min_c = min(changes)
     max_c = max(changes)
 
+    ranges = []
     if min_c == max_c:
          center_value = min_c
          magnitude = abs(center_value) if abs(center_value) > 0 else 1.0
          interval_size = magnitude * 0.0001
          start_base = center_value - 6.5 * interval_size
-         ranges = []
          for i in range(13):
              start_val = start_base + i * interval_size
              end_val = start_val + interval_size
-             ranges.append({"start": start_val, "end": end_val, "count": 0})
+             ranges.append(DistributionRange(start=start_val, end=end_val, count=0))
     else:
          interval_size = (max_c - min_c) / 13
          if not math.isfinite(interval_size) or interval_size == 0:
              fallback_mag = max(abs(min_c), abs(max_c), 1.0)
              interval_size = fallback_mag * 0.0001
-         ranges = []
          for i in range(13):
              start_val = min_c + i * interval_size
              end_val = start_val + interval_size
-             ranges.append({"start": start_val, "end": end_val, "count": 0})
+             ranges.append(DistributionRange(start=start_val, end=end_val, count=0))
 
     for c in changes:
          if not math.isfinite(c):
@@ -151,6 +142,6 @@ def distribution_of_changes(rates1: list, rates2: list) -> list:
              index = 0
          elif index >= 13:
              index = 12
-         ranges[index]["count"] += 1
+         ranges[index].count += 1
 
     return ranges
