@@ -107,26 +107,24 @@ def main():
                 print("Invalid format. Use XXX/YYY format.")
                 continue
             c1, c2 = parts
-            
             days = get_period(limit_to_months=True)
             if not days: continue
-            
             try:
                 rates1 = fetch_currency_data(c1, days)
-                if not rates1:
-                    print("Error: Unable to fetch data for given pair. Try again.")
+                if not rates1 or len(rates1) < 2:
+                    print(
+                        f"Error: Unable to fetch valid/sufficient data for the first currency ({c1}). Aborting cross-rate analysis.")
                     continue
 
                 rates2 = fetch_currency_data(c2, days)
-                if not rates2:
-                    print("Error: Unable to fetch data for given pair. Try again.")
+                if not rates2 or len(rates2) < 2:
+                    print(
+                        f"Error: Unable to fetch valid/sufficient data for the second currency ({c2}). Aborting cross-rate analysis.")
                     continue
-                
                 ranges = distribution_of_changes(rates1, rates2)
                 print(f"\n--- Distribution of Changes for {pair} ---")
                 print(f"{'Range Start':>12} - {'Range End':<12} | {'Count':^5} | Histogram")
                 print("-" * 65)
-                
                 csv_data = []
                 for r in ranges:
                     start_str = f"{r['start']:.4f}"
@@ -134,7 +132,7 @@ def main():
                     stars = "*" * r['count']
                     print(f"{start_str:>12} - {end_str:<12} | {r['count']:^5} | {stars}")
                     csv_data.append({"Range Start": start_str, "Range End": end_str, "Count": r['count']})
-                    
+
                 if input("Export results to CSV? (Y/N): ").strip().upper() == 'Y':
                     if not export_to_csv(csv_data, f"distribution_output_{c1}_{c2}.csv"):
                         print("Export failed.")
