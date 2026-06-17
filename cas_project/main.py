@@ -102,8 +102,8 @@ def main():
 
         elif choice == "3":
             pair = input("Enter Currency Pair (e.g., EUR/USD): ").strip().upper()
-            parts = [segment.strip() for segment in pair.split("/") if segment.strip()]
-            if len(parts) != 2:
+            parts = [segment.strip() for segment in pair.split("/")]
+            if len(parts) != 2 or not all(parts):
                 print("Invalid format. Use XXX/YYY format.")
                 continue
             c1, c2 = parts
