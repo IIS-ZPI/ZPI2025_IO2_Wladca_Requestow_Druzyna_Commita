@@ -93,10 +93,13 @@ def test_main_dist_wrong_separator(mock_exit, mock_input):
 @patch("main.fetch_currency_data", side_effect=[[], []])
 @patch("builtins.input", side_effect=["3", "EUR//USD", "4"])
 @patch("main.sys.exit")
-def test_main_dist_double_slash(mock_exit, mock_input, mock_fetch):
+def test_main_dist_double_slash(mock_exit, mock_input, mock_fetch, capsys):
     setup_exit(mock_exit)
     with pytest.raises(SystemExit):
         main()
+    captured = capsys.readouterr()
+    assert "Invalid format. Use XXX/YYY format." in captured.out
+    mock_fetch.assert_not_called()
 
 # 26. Test: Main Loop - Option 1: Extreme currency code length
 @patch("main.fetch_currency_data", return_value=[])
