@@ -91,7 +91,7 @@ def test_main_dist_wrong_separator(mock_exit, mock_input):
 
 # 25. Test: Main Loop - Option 3: Double slashes (EUR//USD)
 @patch("main.fetch_currency_data", side_effect=[[], []])
-@patch("builtins.input", side_effect=["3", "EUR//USD", "3", "4"])
+@patch("builtins.input", side_effect=["3", "EUR//USD", "4"])
 @patch("main.sys.exit")
 def test_main_dist_double_slash(mock_exit, mock_input, mock_fetch):
     setup_exit(mock_exit)
