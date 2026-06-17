@@ -106,7 +106,6 @@ def main():
             if len(parts) != 2 or not all(parts):
                 print("Invalid format. Use XXX/YYY format.")
                 continue
-            c1, c2 = parts
             
             days = get_period(limit_to_months=True)
             if not days: continue
