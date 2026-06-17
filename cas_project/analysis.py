@@ -102,7 +102,7 @@ def distribution_of_changes(rates1: list, rates2: list) -> list:
          if not math.isfinite(a) or not math.isfinite(b):
              continue
          if b == 0:
-             raise ZeroDivisionError("Cannot divide by zero in rates2")
+             continue
          cross_rates.append(a / b)
 
     if len(cross_rates) < 2:
@@ -119,35 +119,33 @@ def distribution_of_changes(rates1: list, rates2: list) -> list:
 
     min_c = min(changes)
     max_c = max(changes)
+    same_change = math.isclose(min_c, max_c, rel_tol=1e-12, abs_tol=1e-12)
 
-    if min_c == max_c:
-         center_value = min_c
-         magnitude = abs(center_value) if abs(center_value) > 0 else 1.0
-         interval_size = magnitude * 0.0001
-         start_base = center_value - 6.5 * interval_size
-         ranges = []
-         for i in range(13):
-             start_val = start_base + i * interval_size
-             end_val = start_val + interval_size
-             ranges.append({"start": start_val, "end": end_val, "count": 0})
+    if same_change:
+         center_value = statistics.mean(changes)
+         half_span = max(
+             max(abs(c - center_value) for c in changes),
+             abs(center_value) * 1e-9,
+             1e-12
+         )
+         start_base = center_value - half_span
+         interval_size = (half_span * 2) / 13
     else:
-         interval_size = (max_c - min_c) / 13
-         if not math.isfinite(interval_size) or interval_size == 0:
-             fallback_mag = max(abs(min_c), abs(max_c), 1.0)
-             interval_size = fallback_mag * 0.0001
-         ranges = []
-         for i in range(13):
-             start_val = min_c + i * interval_size
-             end_val = start_val + interval_size
-             ranges.append({"start": start_val, "end": end_val, "count": 0})
+         span = max_c - min_c
+         padding = max(abs(span) * 1e-12, max(abs(min_c), abs(max_c), 1.0) * 1e-15)
+         start_base = min_c - padding
+         interval_size = (span + 2 * padding) / 13
+
+    ranges = []
+    for i in range(13):
+         start_val = start_base + i * interval_size
+         end_val = start_val + interval_size
+         ranges.append({"start": start_val, "end": end_val, "count": 0})
 
     for c in changes:
          if not math.isfinite(c):
              continue
-         if min_c == max_c:
-             index = int((c - (center_value - 6.5 * interval_size)) / interval_size)
-         else:
-             index = int((c - min_c) / interval_size)
+         index = int((c - start_base) / interval_size)
          if index < 0:
              index = 0
          elif index >= 13:
