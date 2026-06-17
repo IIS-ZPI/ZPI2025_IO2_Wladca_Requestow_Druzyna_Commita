@@ -1,25 +1,29 @@
 import math
 import statistics
 
+def _clean_numeric_rates(rates: list) -> list:
+    cleaned_rates = []
+    for rate in rates:
+        if not isinstance(rate, (int, float)):
+            raise TypeError("rates values must be numeric")
+        if math.isfinite(rate):
+            cleaned_rates.append(float(rate))
+    return cleaned_rates
+
 def session_analysis(rates: list) -> tuple:
     """
     Calculates the number of rising, falling, and unchanged sessions.
     """
     if not isinstance(rates, list):
         raise TypeError("rates must be a list")
-    if len(rates) < 2:
+    clean_rates = _clean_numeric_rates(rates)
+    if len(clean_rates) < 2:
         return 0, 0, 0
 
     rises, falls, unchanged = 0, 0, 0
-    # Start loop from index 1 and compare to index 0
-    for i in range(1, len(rates)):
-        prev = rates[i-1]
-        curr = rates[i]
-
-        if not isinstance(prev, (int, float)) or not isinstance(curr, (int, float)):
-            raise TypeError("rates values must be numeric")
-        if math.isnan(prev) or math.isnan(curr):
-            continue
+    for i in range(1, len(clean_rates)):
+        prev = clean_rates[i-1]
+        curr = clean_rates[i]
 
         if curr > prev:
             rises += 1
@@ -42,10 +46,7 @@ def statistical_measures(rates: list) -> dict:
     if not target_rates:
          return {}
 
-    if any(not isinstance(x, (int, float)) for x in target_rates):
-         raise TypeError("rates values must be numeric")
-
-    valid_rates = [float(x) for x in target_rates if math.isfinite(x)]
+    valid_rates = _clean_numeric_rates(target_rates)
     if not valid_rates:
          return {
              "median": 0.0,
@@ -60,7 +61,7 @@ def statistical_measures(rates: list) -> dict:
     try:
          mode = statistics.mode(valid_rates)
     except statistics.StatisticsError:
-         mode = valid_rates[0] # Fallback in case of multi-modal
+         mode = valid_rates[0]
 
     if n > 1:
          std_dev = statistics.stdev(valid_rates)

@@ -28,8 +28,8 @@ def test_sa_with_infinity():
     """Checking behavior with math.inf (e.g., hyperinflation data anomaly)."""
     rates = [4.1, math.inf, 4.2]
     rises, falls, unchanged = session_analysis(rates)
-    assert rises == 1   # 4.1 to Inf
-    assert falls == 1   # Inf to 4.2
+    assert rises == 1
+    assert falls == 0
     assert unchanged == 0
 
 def test_sa_micro_float_differences():
