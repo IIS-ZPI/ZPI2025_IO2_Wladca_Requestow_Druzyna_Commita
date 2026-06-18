@@ -309,54 +309,67 @@ stateDiagram-v2
     
     StartCLI --> DisplayMainMenu
     
-    DisplayMainMenu --> UserChoice{User<br/>Selection?}
+    state UserChoice <<choice>>
+    DisplayMainMenu --> UserChoice
     
-    UserChoice -->|Option 1: Session Analysis| SessionFlow
-    UserChoice -->|Option 2: Statistical Measures| StatsFlow
-    UserChoice -->|Option 3: Distribution Analysis| DistributionFlow
-    UserChoice -->|Option 4: Exit| ExitApp
+    UserChoice --> SessionFlow : Option 1: Session Analysis
+    UserChoice --> StatsFlow : Option 2: Statistical Measures
+    UserChoice --> DistributionFlow : Option 3: Distribution Analysis
+    UserChoice --> ExitApp : Option 4: Exit
     
     %% Session Analysis Flow
-    SessionFlow --> InputCurrencySession["Input Currency Code"]
-    InputCurrencySession --> InputPeriodSession["Select Time Period"]
-    InputPeriodSession --> FetchDataSession["Fetch from NBP API"]
-    FetchDataSession --> ValidateSession{"Data Valid?"}
-    ValidateSession -->|No| ErrorHandlingSession["Display Error"]
+    SessionFlow --> InputCurrencySession : Input Currency Code
+    InputCurrencySession --> InputPeriodSession : Select Time Period
+    InputPeriodSession --> FetchDataSession : Fetch from NBP API
+    
+    state ValidateSession <<choice>>
+    FetchDataSession --> ValidateSession
+    ValidateSession --> ErrorHandlingSession : Data Valid? No
     ErrorHandlingSession --> DisplayMainMenu
-    ValidateSession -->|Yes| AnalyzeSession["Execute Session Analysis"]
-    AnalyzeSession --> DisplaySessionResults["Display Results"]
-    DisplaySessionResults --> ExportDecisionSession{"Export?"}
-    ExportDecisionSession -->|Yes| ExportSessionCSV["Export to CSV"]
-    ExportDecisionSession -->|No| DisplayMainMenu
+    ValidateSession --> AnalyzeSession : Data Valid? Yes
+    AnalyzeSession --> DisplaySessionResults : Execute Session Analysis
+    
+    state ExportDecisionSession <<choice>>
+    DisplaySessionResults --> ExportDecisionSession
+    ExportDecisionSession --> ExportSessionCSV : Export? Yes
+    ExportDecisionSession --> DisplayMainMenu : Export? No
     ExportSessionCSV --> DisplayMainMenu
     
     %% Statistical Measures Flow
-    StatsFlow --> InputCurrencyStats["Input Currency Code"]
-    InputCurrencyStats --> InputPeriodStats["Select Time Period"]
-    InputPeriodStats --> FetchDataStats["Fetch from NBP API"]
-    FetchDataStats --> ValidateStats{"Data Valid?"}
-    ValidateStats -->|No| ErrorHandlingStats["Display Error"]
+    StatsFlow --> InputCurrencyStats : Input Currency Code
+    InputCurrencyStats --> InputPeriodStats : Select Time Period
+    InputPeriodStats --> FetchDataStats : Fetch from NBP API
+    
+    state ValidateStats <<choice>>
+    FetchDataStats --> ValidateStats
+    ValidateStats --> ErrorHandlingStats : Data Valid? No
     ErrorHandlingStats --> DisplayMainMenu
-    ValidateStats -->|Yes| AnalyzeStats["Calculate Statistics"]
-    AnalyzeStats --> DisplayStatsResults["Display Median, Mode, StdDev, CV"]
-    DisplayStatsResults --> ExportDecisionStats{"Export?"}
-    ExportDecisionStats -->|Yes| ExportStatsCSV["Export to CSV"]
-    ExportDecisionStats -->|No| DisplayMainMenu
+    ValidateStats --> AnalyzeStats : Data Valid? Yes
+    AnalyzeStats --> DisplayStatsResults : Calculate Statistics
+    
+    state ExportDecisionStats <<choice>>
+    DisplayStatsResults --> ExportDecisionStats
+    ExportDecisionStats --> ExportStatsCSV : Export? Yes
+    ExportDecisionStats --> DisplayMainMenu : Export? No
     ExportStatsCSV --> DisplayMainMenu
     
     %% Distribution Analysis Flow
-    DistributionFlow --> InputCurrency1["Input First Currency"]
-    InputCurrency1 --> InputCurrency2["Input Second Currency"]
-    InputCurrency2 --> InputPeriodDist["Select Time Period"]
-    InputPeriodDist --> FetchDataDist["Fetch Both Currencies"]
-    FetchDataDist --> ValidateDist{"Data Valid?"}
-    ValidateDist -->|No| ErrorHandlingDist["Display Error"]
+    DistributionFlow --> InputCurrency1 : Input First Currency
+    InputCurrency1 --> InputCurrency2 : Input Second Currency
+    InputCurrency2 --> InputPeriodDist : Select Time Period
+    InputPeriodDist --> FetchDataDist : Fetch Both Currencies
+    
+    state ValidateDist <<choice>>
+    FetchDataDist --> ValidateDist
+    ValidateDist --> ErrorHandlingDist : Data Valid? No
     ErrorHandlingDist --> DisplayMainMenu
-    ValidateDist -->|Yes| AnalyzeDist["Calculate Distribution"]
-    AnalyzeDist --> DisplayDistResults["Display Distribution Ranges"]
-    DisplayDistResults --> ExportDecisionDist{"Export?"}
-    ExportDecisionDist -->|Yes| ExportDistCSV["Export to CSV"]
-    ExportDecisionDist -->|No| DisplayMainMenu
+    ValidateDist --> AnalyzeDist : Data Valid? Yes
+    AnalyzeDist --> DisplayDistResults : Calculate Distribution
+    
+    state ExportDecisionDist <<choice>>
+    DisplayDistResults --> ExportDecisionDist
+    ExportDecisionDist --> ExportDistCSV : Export? Yes
+    ExportDecisionDist --> DisplayMainMenu : Export? No
     ExportDistCSV --> DisplayMainMenu
     
     ExitApp --> [*]
@@ -368,31 +381,36 @@ stateDiagram-v2
 stateDiagram-v2
     [*] --> ReceiveRequest
     
-    ReceiveRequest --> ValidateInput{"Input Valid?"}
-    ValidateInput -->|No| RaiseTypeError["Raise TypeError"]
+    state ValidateInput <<choice>>
+    ReceiveRequest --> ValidateInput
+    ValidateInput --> RaiseTypeError : Input Valid? No
     RaiseTypeError --> [*]
     
-    ValidateInput -->|Yes| BuildURL["Construct API URL"]
-    BuildURL --> HTTPRequest["Send HTTP Request"]
+    ValidateInput --> BuildURL : Input Valid? Yes
+    BuildURL --> HTTPRequest : Construct API URL
     
-    HTTPRequest --> RequestSuccess{"Request<br/>Successful?"}
-    RequestSuccess -->|Network Error| RaiseNetworkError["Raise NetworkException"]
+    state RequestSuccess <<choice>>
+    HTTPRequest --> RequestSuccess
+    RequestSuccess --> RaiseNetworkError : Network Error
     RaiseNetworkError --> [*]
-    RequestSuccess -->|HTTP Error| RaiseHTTPError["Raise HTTPError"]
+    RequestSuccess --> RaiseHTTPError : HTTP Error
     RaiseHTTPError --> [*]
-    RequestSuccess -->|Yes| ReceiveResponse["Parse JSON Response"]
+    RequestSuccess --> ReceiveResponse : Request Successful? Yes
     
-    ReceiveResponse --> ValidateStructure{"Valid JSON<br/>Structure?"}
-    ValidateStructure -->|No| RaiseParsingError["Raise DataParsingError"]
+    state ValidateStructure <<choice>>
+    ReceiveResponse --> ValidateStructure
+    ValidateStructure --> RaiseParsingError : Valid JSON Structure? No
     RaiseParsingError --> [*]
     
-    ValidateStructure -->|Yes| ExtractRates["Extract Rate Values"]
-    ExtractRates --> ValidateValues{"Valid Rate<br/>Values?"}
-    ValidateValues -->|No| RaiseValueError["Raise DataParsingError"]
+    ValidateStructure --> ExtractRates : Valid JSON Structure? Yes
+    
+    state ValidateValues <<choice>>
+    ExtractRates --> ValidateValues
+    ValidateValues --> RaiseValueError : Valid Rate Values? No
     RaiseValueError --> [*]
     
-    ValidateValues -->|Yes| ConvertToCurrencyEntries["Create CurrencyEntry Objects"]
-    ConvertToCurrencyEntries --> ReturnData["Return Rate Data"]
+    ValidateValues --> ConvertToCurrencyEntries : Valid Rate Values? Yes
+    ConvertToCurrencyEntries --> ReturnData : Create CurrencyEntry Objects
     ReturnData --> [*]
 ```
 
