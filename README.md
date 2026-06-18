@@ -71,10 +71,6 @@ All comprehensive project documentation is located in the **`cas_project/docs/`*
   - Activity diagram depicting user workflows
   - System design patterns and architectural decisions
 
-- **BACKLOG.md**: Product backlog, user stories, and requirements prioritization
-  - Link to Jira project for real-time tracking
-  - Story points and sprint planning information
-
 ## Testing and Quality Assurance
 
 ### Test Structure
@@ -114,24 +110,6 @@ pytest --cov=cas_project
 
 The project uses **GitHub Actions** for automated testing and validation. The workflow is configured in `.github/workflows/`:
 
-**Workflow: `test.yml`**
-- **Trigger**: Automatic execution on every push to main branch and pull requests
-- **Test Environment**: Python 3.10+ on Ubuntu latest
-- **Steps**:
-  1. Checkout source code
-  2. Setup Python environment
-  3. Install dependencies
-  4. Execute all unit tests with pytest
-  5. Generate test reports
-  6. Perform code quality checks
-
-**Benefits**:
-- Immediate feedback on code changes
-- Automated detection of regressions
-- Consistent testing across all commits
-- Prevention of broken code in main branch
-- Compliance validation with project requirements
-
 ### Manual Test Execution
 ```bash
 # Run complete test suite
@@ -159,7 +137,6 @@ ZPI2025_IO2_Wladca_Requestow_Druzyna_Commita/
 │   ├── requirements.txt               # Python dependency specifications
 │   ├── docs/
 │   │   ├── Architecture.md            # System architecture and UML diagrams
-│   │   └── BACKLOG.md                 # Project backlog and requirements
 │   └── test/
 │       ├── test_api.py                # API module unit tests
 │       ├── test_analysis.py           # Analysis module unit tests
@@ -172,20 +149,18 @@ ZPI2025_IO2_Wladca_Requestow_Druzyna_Commita/
 │           └── test_main.md           # Main module test report
 └── .github/
     └── workflows/
-        └── test.yml                   # GitHub Actions CI/CD workflow
+        └── ci.yml                   # GitHub Actions CI/CD workflow
 ```
 
 ## Backlog and Issue Tracking
 
-**Primary Backlog**: [Jira Project Board](https://cas-project-wladca-requestow-druzyna-commita.atlassian.net/jira/software/projects/WRDC)
+**Primary Backlog**: [Jira Project Board](https://cas-project-wladca-requestow-druzyna-commita.atlassian.net/jira/software/projects/WRDC/board/1)
 
 The Jira project contains:
 - User stories and requirements
 - Sprint planning and task allocation
 - Issue tracking and resolution status
 - Acceptance criteria and completion definition
-
-**Secondary Backlog**: See `cas_project/docs/BACKLOG.md` for local backlog reference
 
 ## Development and Contribution Guidelines
 
