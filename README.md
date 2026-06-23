@@ -70,6 +70,7 @@ All comprehensive project documentation is located in the **`cas_project/docs/`*
   - Sequence diagram illustrating data flow
   - Activity diagram depicting user workflows
   - System design patterns and architectural decisions
+  - Burndown chart
 
 ## Testing and Quality Assurance
 
@@ -157,10 +158,7 @@ ZPI2025_IO2_Wladca_Requestow_Druzyna_Commita/
 **Primary Backlog**: [Jira Project Board](https://cas-project-wladca-requestow-druzyna-commita.atlassian.net/jira/software/projects/WRDC/board/1)
 
 The Jira project contains:
-- User stories and requirements
-- Sprint planning and task allocation
-- Issue tracking and resolution status
-- Acceptance criteria and completion definition
+- Sprint planning
 
 ## Development and Contribution Guidelines
 
